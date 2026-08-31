@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klassenrat Protokoll</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: #f0f4ff;
+    min-height: 100vh;
+    padding: 16px 12px 48px;
+  }
+
+  /* ── Anleitung ── */
+  .anleitung {
+    max-width: 760px; margin: 0 auto 18px;
+    background: #2d3a8c; border-radius: 16px;
+    padding: 18px 22px; color: #fff;
+  }
+  .anleitung h2 { font-size: 1rem; font-weight: 900; margin-bottom: 12px; }
+  .steps { display: flex; gap: 10px; flex-wrap: wrap; }
+  .step {
+    flex: 1; min-width: 130px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 10px; padding: 10px 12px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .step-num {
+    background: #fff; color: #2d3a8c;
+    font-weight: 900; font-size: 0.9rem;
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-text { font-size: 0.82rem; font-weight: 700; line-height: 1.35; }
+  .step-text em { display: block; font-style: normal; opacity: 0.75; font-weight: 600; font-size: 0.77rem; margin-top: 2px; }
+
+  /* ── Seite ── */
+  .page {
+    max-width: 760px; margin: 0 auto;
+    background: #fff; border-radius: 20px;
+    padding: 32px 36px 40px;
+    box-shadow: 0 4px 24px rgba(80,100,180,0.10);
+    position: relative; overflow: hidden;
+  }
+  .page::before {
+    content: ''; position: absolute; top: 0; right: 0;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, #e0e8ff 1.5px, transparent 1.5px);
+    background-size: 12px 12px; opacity: 0.6; pointer-events: none;
+  }
+
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+  .header-icon { font-size: 2.6rem; line-height: 1; }
+  .header-text h1 { font-size: 2rem; font-weight: 900; color: #2d3a8c; letter-spacing: -0.5px; }
+  .header-text p { font-size: 0.95rem; color: #8090c0; font-weight: 600; }
+
+  .date-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 16px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .date-row label { font-size: 1rem; font-weight: 700; color: #2d3a8c; white-space: nowrap; }
+  .field-input {
+    border: none; border-bottom: 2.5px solid #b0bcf0; background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 700;
+    color: #2d3a8c; padding: 4px 6px; outline: none; transition: border-color 0.2s;
+  }
+  .field-input:focus { border-color: #4a5fd6; }
+
+  .divider {
+    height: 3px; border-radius: 2px;
+    background: linear-gradient(90deg, #4a5fd6, #a0b0ff, transparent);
+    margin: 18px 0;
+  }
+  .section-title {
+    font-size: 1.25rem; font-weight: 900; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* ── Rollen: 4 Karten, 2x2 ── */
+  .roles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 10px;
+  }
+  .role-card { border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .role-card .role-label {
+    font-size: 0.78rem; font-weight: 800; letter-spacing: 0.5px;
+    text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+  }
+  .role-card input {
+    border: none; border-bottom: 2px solid rgba(0,0,0,0.15); background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    padding: 6px 2px; width: 100%; outline: none; color: #1a1a3a;
+  }
+  .role-card input::placeholder { font-weight: 400; opacity: 0.5; }
+  .role-praesident { background: #fff0d6; } .role-praesident .role-label { color: #b06a00; }
+  .role-leise      { background: #d6f0e8; } .role-leise      .role-label { color: #006b48; }
+  .role-protokol   { background: #f5d6f5; } .role-protokol   .role-label { color: #7a007a; }
+  .role-zeit       { background: #fde8e8; } .role-zeit       .role-label { color: #a02020; }
+
+  /* ── Themen als Karten ── */
+  .themen-section .section-title { color: #2d3a8c; }
+  .themen-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .thema-card {
+    background: #f5f7ff;
+    border: 2px solid #dde2f8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* Zeile 1: Nummer + Thema-Eingabe */
+  .thema-top {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .thema-num {
+    width: 30px; height: 30px; border-radius: 50%; background: #2d3a8c;
+    color: #fff; font-weight: 900; font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .thema-top input {
+    flex: 1; border: none; border-bottom: 2px solid #c8d0f0; background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    color: #1a1a3a; padding: 5px 4px; outline: none;
+  }
+  .thema-top input::placeholder { font-weight: 400; opacity: 0.45; }
+
+  /* Zeile 2: Von-wem + Minuten */
+  .thema-meta {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
+
+  .thema-meta-item {
+    display: flex; align-items: center; gap: 7px; flex: 1; min-width: 140px;
+  }
+  .thema-meta-label {
+    font-size: 0.75rem; font-weight: 800; color: #6070b0;
+    text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap;
+  }
+  .thema-meta-item input {
+    flex: 1; border: none; border-bottom: 1.5px solid #c8d0f0; background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700;
+    color: #1a1a3a; padding: 3px 4px; outline: none; min-width: 0;
+  }
+  .thema-meta-item input::placeholder { font-weight: 400; opacity: 0.45; }
+
+  /* Minuten-Buttons */
+  .minuten-group {
+    display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+  }
+  .min-btn {
+    background: #e6eaff; border: 2px solid transparent;
+    border-radius: 8px; padding: 4px 9px;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800;
+    color: #2d3a8c; cursor: pointer; transition: all 0.15s;
+    line-height: 1.2;
+  }
+  .min-btn:hover { background: #d0d8ff; }
+  .min-btn.active {
+    background: #2d3a8c; color: #fff; border-color: #2d3a8c;
+  }
+
+  /* ── Add-Buttons ── */
+  .add-btn {
+    margin-top: 8px; background: none; border: 2px dashed #b0bcf0;
+    border-radius: 10px; padding: 8px 14px; font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem; font-weight: 700; color: #6070b0; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+  }
+  .add-btn:hover { background: #eef1ff; border-color: #4a5fd6; color: #2d3a8c; }
+
+  /* ── Beschlüsse ── */
+  .beschluss-section .section-title { color: #006b48; }
+  .beschluss-list { display: flex; flex-direction: column; gap: 12px; }
+  .beschluss-card {
+    background: #f0faf5; border-left: 4px solid #2fb87a;
+    border-radius: 0 12px 12px 0; padding: 12px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .beschluss-label {
+    font-size: 0.78rem; font-weight: 800; color: #006b48;
+    letter-spacing: 0.4px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .beschluss-card input {
+    border: none; border-bottom: 2px solid #a8e0c4; background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    color: #1a1a3a; padding: 4px 2px; width: 100%; outline: none;
+  }
+  .beschluss-card input::placeholder { font-weight: 400; opacity: 0.45; }
+  .beschluss-card textarea {
+    border: none; border-bottom: 2px solid #a8e0c4; background: transparent;
+    font-family: 'Nunito', sans-serif; font-size: 0.95rem; font-weight: 600;
+    color: #1a1a3a; padding: 4px 2px; width: 100%; outline: none;
+    resize: none; overflow: hidden; min-height: 36px;
+  }
+  .beschluss-card textarea::placeholder { font-weight: 400; opacity: 0.45; }
+  .add-btn-green {
+    margin-top: 6px; background: none; border: 2px dashed #88d4b0;
+    border-radius: 10px; padding: 8px 14px; font-family: 'Nunito', sans-serif;
+    font-size: 0.9rem; font-weight: 700; color: #006b48; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+  }
+  .add-btn-green:hover { background: #e0f7ed; border-color: #2fb87a; color: #004a32; }
+
+  /* ── PDF Button ── */
+  .pdf-bar {
+    margin-top: 36px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .pdf-big-btn {
+    background: linear-gradient(135deg, #2d3a8c, #4a5fd6);
+    color: #fff; border: none; border-radius: 16px; padding: 18px 40px;
+    font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 900;
+    cursor: pointer; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 18px rgba(45,58,140,0.30);
+    transition: transform 0.15s, box-shadow 0.15s;
+    width: 100%; max-width: 380px; justify-content: center;
+  }
+  .pdf-big-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(45,58,140,0.38); }
+  .pdf-big-btn:active { transform: translateY(0); }
+  .pdf-hint { font-size: 0.82rem; color: #8090c0; font-weight: 700; text-align: center; }
+  .airdrop-hint {
+    background: #f0faf5; border: 2px solid #2fb87a; border-radius: 12px;
+    padding: 10px 16px; font-size: 0.85rem; font-weight: 700; color: #006b48;
+    display: flex; align-items: center; gap: 10px;
+    max-width: 380px; width: 100%;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    html, body { background: #fff !important; padding: 0 !important; margin: 0 !important; }
+    .anleitung, .pdf-bar, .add-btn, .add-btn-green { display: none !important; }
+    .page {
+      box-shadow: none !important; border-radius: 0 !important;
+      padding: 14px 18px 18px !important; max-width: 100% !important; margin: 0 !important;
+    }
+    .page::before { display: none !important; }
+    input, textarea { border-bottom: 1.5px solid #bbb !important; background: transparent !important; }
+    .min-btn { border: 1.5px solid #bbb !important; }
+  }
+
+  @media (max-width: 560px) {
+    .roles-grid { grid-template-columns: 1fr; }
+    .page { padding: 22px 14px 32px; }
+    .steps { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="anleitung">
+  <h2>📋 So funktioniert das Protokoll</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text">Felder ausfüllen <em>Rollen, Themen &amp; Beschlüsse eintragen</em></div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">PDF erstellen <em>Großen blauen Knopf drücken</em></div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">Per AirDrop schicken <em>PDF an Lehrkraft senden</em></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="protokoll">
+
+  <div class="header">
+    <div class="header-icon">🗣️</div>
+    <div class="header-text">
+      <h1>Klassenrat</h1>
+      <p>Protokoll</p>
+    </div>
+  </div>
+
+  <div class="date-row">
+    <label>📅 Datum:</label>
+    <input type="date" id="datum" class="field-input">
+    <span style="margin-left:18px; font-weight:700; color:#8090c0; font-size:0.95rem;">Klasse:</span>
+    <input type="text" placeholder="z. B. 5E" id="klasse" class="field-input" style="width:70px; margin-left:6px;">
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Rollen: nur noch 3 -->
+  <div class="section-title" style="color:#2d3a8c;">
+    <span>👥</span> Unsere Rollen heute
+  </div>
+  <div class="roles-grid">
+    <div class="role-card role-praesident">
+      <div class="role-label">⭐ Präsident/in</div>
+      <input type="text" placeholder="Name …">
+    </div>
+    <div class="role-card role-leise">
+      <div class="role-label">🤫 Leisewächter/in</div>
+      <input type="text" placeholder="Name …">
+    </div>
+    <div class="role-card role-protokol">
+      <div class="role-label">✏️ Protokollant/in</div>
+      <input type="text" placeholder="Name …">
+    </div>
+    <div class="role-card role-zeit">
+      <div class="role-label">⏱️ Zeitwächter/in</div>
+      <input type="text" placeholder="Name …">
+    </div>
+  </div>
+
+  <div class="divider" style="margin-top:24px;"></div>
+
+  <!-- Themen -->
+  <div class="themen-section" style="margin-bottom:24px;">
+    <div class="section-title"><span>💬</span> Themen</div>
+    <div class="themen-list" id="themenList">
+    </div>
+    <button class="add-btn" onclick="addThema()">＋ Weiteres Thema</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Beschlüsse -->
+  <div class="beschluss-section">
+    <div class="section-title"><span>✅</span> Beschlüsse</div>
+    <div class="beschluss-list" id="beschlussList">
+      <div class="beschluss-card">
+        <div class="beschluss-label">📌 Zu Thema</div>
+        <input type="text" placeholder="Welches Thema? …">
+        <div class="beschluss-label" style="margin-top:6px;">💡 Wir haben beschlossen …</div>
+        <textarea rows="2" placeholder="Was wurde entschieden? …" oninput="autoResize(this)"></textarea>
+      </div>
+      <div class="beschluss-card">
+        <div class="beschluss-label">📌 Zu Thema</div>
+        <input type="text" placeholder="Welches Thema? …">
+        <div class="beschluss-label" style="margin-top:6px;">💡 Wir haben beschlossen …</div>
+        <textarea rows="2" placeholder="Was wurde entschieden? …" oninput="autoResize(this)"></textarea>
+      </div>
+      <div class="beschluss-card">
+        <div class="beschluss-label">📌 Zu Thema</div>
+        <input type="text" placeholder="Welches Thema? …">
+        <div class="beschluss-label" style="margin-top:6px;">💡 Wir haben beschlossen …</div>
+        <textarea rows="2" placeholder="Was wurde entschieden? …" oninput="autoResize(this)"></textarea>
+      </div>
+    </div>
+    <button class="add-btn-green" onclick="addBeschluss()">＋ Weiterer Beschluss</button>
+  </div>
+
+  <div class="pdf-bar">
+    <button class="pdf-big-btn" onclick="drucken()">
+      📄 PDF erstellen &amp; speichern
+    </button>
+    <div id="pdf-hint-text" class="pdf-hint" style="display:none;"></div>
+    <div class="airdrop-hint">
+      📡 Danach: Teilen → AirDrop → Name der Lehrkraft
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById('datum').valueAsDate = new Date();
+
+  const MINUTEN = [2, 3, 5, 10, 15];
+  let themaCount = 0;
+
+  function makeThemaCard(num) {
+    const card = document.createElement('div');
+    card.className = 'thema-card';
+    card.innerHTML = `
+      <div class="thema-top">
+        <div class="thema-num">${num}</div>
+        <input type="text" placeholder="Thema eingeben …">
+      </div>
+      <div class="thema-meta">
+        <div class="thema-meta-item">
+          <span class="thema-meta-label">👤 Von</span>
+          <input type="text" placeholder="Name …">
+        </div>
+        <div class="thema-meta-item" style="flex:none;">
+          <span class="thema-meta-label">⏱ Minuten</span>
+          <div class="minuten-group">
+            ${MINUTEN.map(m => `<button class="min-btn" onclick="selectMin(this)">${m}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+    return card;
+  }
+
+  function addThema() {
+    themaCount++;
+    const list = document.getElementById('themenList');
+    const card = makeThemaCard(themaCount);
+    list.appendChild(card);
+    card.querySelector('input').focus();
+  }
+
+  function selectMin(btn) {
+    // Toggle innerhalb der eigenen Gruppe
+    const group = btn.closest('.minuten-group');
+    group.querySelectorAll('.min-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // 5 Themen beim Start
+  for (let i = 0; i < 5; i++) addThema();
+
+  function addBeschluss() {
+    const list = document.getElementById('beschlussList');
+    const card = document.createElement('div');
+    card.className = 'beschluss-card';
+    card.innerHTML = `
+      <div class="beschluss-label">📌 Zu Thema</div>
+      <input type="text" placeholder="Welches Thema? …">
+      <div class="beschluss-label" style="margin-top:6px;">💡 Wir haben beschlossen …</div>
+      <textarea rows="2" placeholder="Was wurde entschieden? …" oninput="autoResize(this)"></textarea>
+    `;
+    list.appendChild(card);
+    card.querySelector('input').focus();
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  function drucken() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const hint = document.getElementById('pdf-hint-text');
+    if (isIOS) {
+      hint.style.display = 'block';
+      hint.textContent = '👇 Tippe auf Teilen (□↑) → „Als PDF sichern" oder „Drucken"';
+    }
+    setTimeout(() => window.print(), 200);
+  }
+</script>
+
+</body>
+</html>
